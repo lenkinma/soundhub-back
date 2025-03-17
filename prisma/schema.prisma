@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement()) // Уникальный идентификатор пользователя
+  name      String? // Имя пользователя (может быть необязательным)
+  email     String   @unique // Уникальный email пользователя
+  password  String // Хэшированный пароль
+  avatar    String? // Ссылка на аватар пользователя (может быть необязательным)
+  bio       String? // Описание профиля (может быть необязательным)
+  createdAt DateTime @default(now()) // Дата регистрации
+  updatedAt DateTime @updatedAt // Дата последнего обновления профиля
+
+  // Связи с другими моделями
+  tracks        Track[] // Треки, загруженные пользователем
+  likes         Like[] // Лайки, поставленные пользователем
+  subscriptions Subscription[] @relation("subscribedTo") // Подписки пользователя
+  subscribers   Subscription[] @relation("subscriber") // Подписчики пользователя
+}
+
+model Track {
+  id          Int      @id @default(autoincrement()) // Уникальный идентификатор трека
+  title       String // Название трека
+  description String? // Описание трека (может быть необязательным)
+  genre       String? // Жанр трека (может быть необязательным)
+  tags        String[] // Теги трека (массив строк)
+  artistId    Int // ID пользователя, который загрузил трек
+  artist      User     @relation(fields: [artistId], references: [id]) // Связь с пользователем
+  likes       Like[] // Лайки, поставленные на трек
+  createdAt   DateTime @default(now()) // Дата загрузки трека
+}
+
+model Like {
+  id        Int      @id @default(autoincrement()) // Уникальный идентификатор лайка
+  userId    Int // ID пользователя, который поставил лайк
+  trackId   Int // ID трека, который был лайкнут
+  user      User     @relation(fields: [userId], references: [id]) // Связь с пользователем
+  track     Track    @relation(fields: [trackId], references: [id]) // Связь с треком
+  createdAt DateTime @default(now()) // Дата создания лайка
+}
+
+model Subscription {
+  id             Int      @id @default(autoincrement()) // Уникальный идентификатор подписки
+  subscriberId   Int // ID пользователя, который подписался
+  subscribedToId Int // ID пользователя, на которого подписались
+  subscriber     User     @relation("subscriber", fields: [subscriberId], references: [id]) // Связь с подписчиком
+  subscribedTo   User     @relation("subscribedTo", fields: [subscribedToId], references: [id]) // Связь с пользователем, на которого подписались
+  createdAt      DateTime @default(now()) // Дата создания подписки
+}

@@ -1,0 +1,171 @@
+import { StatusCodes } from "http-status-codes";
+import bcrypt from 'bcrypt';
+
+import type { User, CreateUserInput, UpdateUserInput } from "@/api/user/userModel";
+import prisma from "@/db/prisma";
+import { ServiceResponse } from "@/common/models/serviceResponse";
+import { logger } from "@/server";
+
+export class UserService {
+	// Получение всех пользователей
+	async findAll(): Promise<ServiceResponse<User[] | null>> {
+		try {
+			const users = await prisma.user.findMany({
+				select: {
+					id: true,
+					name: true,
+					email: true,
+					avatar: true,
+					bio: true,
+					createdAt: true,
+					updatedAt: true,
+					password: false // Исключаем пароль из выборки
+				}
+			});
+			
+			if (!users || users.length === 0) {
+				return ServiceResponse.failure("No Users found", null, StatusCodes.NOT_FOUND);
+			}
+			return ServiceResponse.success<User[]>("Users found", users as User[]);
+		} catch (ex) {
+			const errorMessage = `Error finding all users: $${(ex as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while retrieving users.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	// Получение пользователя по ID
+	async findById(id: number): Promise<ServiceResponse<User | null>> {
+		try {
+			const user = await prisma.user.findUnique({
+				where: { id },
+				select: {
+					id: true,
+					name: true,
+					email: true,
+					avatar: true,
+					bio: true,
+					createdAt: true,
+					updatedAt: true,
+					password: false // Исключаем пароль из выборки
+				}
+			});
+			
+			if (!user) {
+				return ServiceResponse.failure("User not found", null, StatusCodes.NOT_FOUND);
+			}
+			return ServiceResponse.success<User>("User found", user as User);
+		} catch (ex) {
+			const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure("An error occurred while finding user.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	// Создание пользователя
+	async createUser(userData: CreateUserInput): Promise<ServiceResponse<User | null>> {
+		try {
+			// Проверка, существует ли пользователь с таким email
+			const existingUser = await prisma.user.findUnique({
+				where: { email: userData.email }
+			});
+			
+			if (existingUser) {
+				return ServiceResponse.failure(
+					"User with this email already exists", 
+					null, 
+					StatusCodes.BAD_REQUEST
+				);
+			}
+			
+			// Хеширование пароля
+			const salt = await bcrypt.genSalt(10);
+			const hashedPassword = await bcrypt.hash(userData.password, salt);
+			
+			// Создание пользователя
+			const newUser = await prisma.user.create({
+				data: {
+					...userData,
+					password: hashedPassword
+				},
+				select: {
+					id: true,
+					name: true,
+					email: true,
+					avatar: true,
+					bio: true,
+					createdAt: true,
+					updatedAt: true,
+					password: false // Исключаем пароль из результата
+				}
+			});
+			
+			return ServiceResponse.success<User>(
+				"User created successfully", 
+				newUser as User, 
+				StatusCodes.CREATED
+			);
+		} catch (ex) {
+			const errorMessage = `Error creating user: ${(ex as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while creating user.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+	
+	// Обновление пользователя
+	async updateUser(id: number, userData: UpdateUserInput): Promise<ServiceResponse<User | null>> {
+		try {
+			// Проверка существования пользователя
+			const existingUser = await prisma.user.findUnique({
+				where: { id }
+			});
+			
+			if (!existingUser) {
+				return ServiceResponse.failure(
+					"User not found", 
+					null, 
+					StatusCodes.NOT_FOUND
+				);
+			}
+			
+			// Обновление пользователя
+			const updatedUser = await prisma.user.update({
+				where: { id },
+				data: userData,
+				select: {
+					id: true,
+					name: true,
+					email: true,
+					avatar: true,
+					bio: true,
+					createdAt: true,
+					updatedAt: true,
+					password: false // Исключаем пароль из результата
+				}
+			});
+			
+			return ServiceResponse.success<User>(
+				"User updated successfully", 
+				updatedUser as User
+			);
+		} catch (ex) {
+			const errorMessage = `Error updating user with id ${id}: ${(ex as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while updating user.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+}
+
+export const userService = new UserService();
