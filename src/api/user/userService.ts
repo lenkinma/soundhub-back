@@ -1,7 +1,8 @@
 import { StatusCodes } from "http-status-codes";
 import bcrypt from 'bcrypt';
+import { generateToken } from '../../common/utils/jwtUtils';
 
-import type { User, CreateUserInput, UpdateUserInput } from "@/api/user/userModel";
+import type { User, CreateUserInput, UpdateUserInput, UserResponse } from "@/api/user/userModel";
 import prisma from "@/db/prisma";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { logger } from "@/server";
@@ -67,7 +68,7 @@ export class UserService {
 	}
 	
 	// Создание пользователя
-	async createUser(userData: CreateUserInput): Promise<ServiceResponse<User | null>> {
+	async createUser(userData: CreateUserInput): Promise<ServiceResponse<{ user: UserResponse; token: string } | null>> {
 		try {
 			// Проверка, существует ли пользователь с таким email
 			const existingUser = await prisma.user.findUnique({
@@ -103,10 +104,14 @@ export class UserService {
 					password: false // Исключаем пароль из результата
 				}
 			});
-			
-			return ServiceResponse.success<User>(
+
+			// Генерация токена
+			const token = generateToken({ id: newUser.id, email: newUser.email });
+
+			// Возвращаем пользователя и токен
+			return ServiceResponse.success(
 				"User created successfully", 
-				newUser as User, 
+				{ user: newUser, token }, 
 				StatusCodes.CREATED
 			);
 		} catch (ex) {
@@ -201,6 +206,53 @@ export class UserService {
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);
 		}
+	}
+
+	async login(email: string, password: string) {
+		try {
+			const user = await prisma.user.findUnique({ where: { email } });
+			
+		if (!user || !(await bcrypt.compare(password, user.password))) {
+			throw new Error('Invalid email or password');
+		}
+
+		const token = generateToken({ id: user.id, email: user.email });
+		const responseObject = { token };
+			return ServiceResponse.success("Вход осуществлен успешно", responseObject, StatusCodes.OK);
+
+
+		} catch (ex) {
+			const errorMessage = `Error logging in: ${(ex as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+	async getUserById(id: number) {
+		return await prisma.user.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				name: true,
+				email: true,
+				avatar: true,
+				bio: true,
+				createdAt: true,
+				updatedAt: true,
+				password: false
+			}
+		});
 	}
 }
 

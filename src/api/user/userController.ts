@@ -2,6 +2,9 @@ import type { Request, RequestHandler, Response } from "express";
 
 import { userService } from "@/api/user/userService";
 import { handleServiceResponse } from "@/common/utils/httpHandlers";
+import { UserService } from './userService';
+
+const userServiceInstance = new UserService();
 
 class UserController {
 	public getUsers: RequestHandler = async (_req: Request, res: Response) => {
@@ -34,6 +37,14 @@ class UserController {
 		const serviceResponse = await userService.deleteUser(id);
 		return handleServiceResponse(serviceResponse, res);
 	};
+
+	async getProfile(req: Request, res: Response) {
+		if (!req.user || typeof req.user === 'string') {
+			return res.status(401).json({ message: 'Unauthorized' });
+		}
+		const user = await userServiceInstance.getUserById(req.user.id);
+		res.json(user);
+	}
 }
 
 export const userController = new UserController();
