@@ -166,6 +166,42 @@ export class UserService {
 			);
 		}
 	}
+
+	// Удаление пользователя
+	async deleteUser(id: number): Promise<ServiceResponse<null>> {
+		try {
+			// Проверка существования пользователя
+			const existingUser = await prisma.user.findUnique({
+				where: { id }
+			});
+			
+			if (!existingUser) {
+				return ServiceResponse.failure(
+					"Пользователь не найден", 
+					null, 
+					StatusCodes.NOT_FOUND
+				);
+			}
+			
+			// Удаление пользователя
+			await prisma.user.delete({
+				where: { id }
+			});
+			
+			return ServiceResponse.success<null>(
+				"Пользователь успешно удален", 
+				null
+			);
+		} catch (ex) {
+			const errorMessage = `Ошибка при удалении пользователя с id ${id}: ${(ex as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"Произошла ошибка при удалении пользователя.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
 }
 
 export const userService = new UserService();
