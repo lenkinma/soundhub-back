@@ -5,7 +5,7 @@ import { commonValidations } from "@/common/utils/commonValidation";
 
 extendZodWithOpenApi(z);
 
-// Обновленная схема User, соответствующая Prisma модели
+// Полная схема User, соответствующая Prisma модели
 export const UserSchema = z.object({
 	id: z.number(),
 	name: z.string().nullable(),
@@ -17,6 +17,7 @@ export const UserSchema = z.object({
 	updatedAt: z.date(),
 });
 
+// схема ответа юзера без пароля
 export const UserResponseSchema = z.object({
 	id: z.number(),
 	name: z.string().nullable(),
@@ -25,15 +26,6 @@ export const UserResponseSchema = z.object({
 	bio: z.string().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-});
-
-// Схема для создания пользователя (без id и дат)
-export const CreateUserSchema = z.object({
-	name: z.string().nullable().optional(),
-	email: z.string().email(),
-	password: z.string().min(6),
-	avatar: z.string().nullable().optional(),
-	bio: z.string().nullable().optional(),
 });
 
 // Схема для обновления пользователя
@@ -51,5 +43,4 @@ export const GetUserSchema = z.object({
 // Тип User на основе схемы
 export type User = z.infer<typeof UserSchema>;
 export type UserResponse = z.infer<typeof UserResponseSchema>;
-export type CreateUserInput = z.infer<typeof CreateUserSchema>;
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;

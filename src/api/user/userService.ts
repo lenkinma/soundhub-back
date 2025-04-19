@@ -1,12 +1,12 @@
 import { StatusCodes } from "http-status-codes";
 import bcrypt from 'bcrypt';
 import { generateToken } from '../../common/utils/jwtUtils';
-
-import type { User, CreateUserInput, UpdateUserInput, UserResponse } from "@/api/user/userModel";
 import prisma from "@/db/prisma";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { logger } from "@/server";
-import jwt from 'jsonwebtoken';
+
+import type { User, UpdateUserInput, UserResponse } from "@/api/user/userModel";
+
 
 export class UserService {
 	// Получение всех пользователей
@@ -69,63 +69,7 @@ export class UserService {
 		}
 	}
 	
-	// Создание пользователя
-	async createUser(userData: CreateUserInput): Promise<ServiceResponse<{ user: UserResponse; token: string } | null>> {
-		try {
-			// Проверка, существует ли пользователь с таким email
-			const existingUser = await prisma.user.findUnique({
-				where: { email: userData.email }
-			});
-			
-			if (existingUser) {
-				return ServiceResponse.failure(
-					"User with this email already exists", 
-					null, 
-					StatusCodes.BAD_REQUEST
-				);
-			}
-			
-			// Хеширование пароля
-			const salt = await bcrypt.genSalt(10);
-			const hashedPassword = await bcrypt.hash(userData.password, salt);
-			
-			// Создание пользователя
-			const newUser = await prisma.user.create({
-				data: {
-					...userData,
-					password: hashedPassword
-				},
-				select: {
-					id: true,
-					name: true,
-					email: true,
-					avatar: true,
-					bio: true,
-					createdAt: true,
-					updatedAt: true,
-					password: false // Исключаем пароль из результата
-				}
-			});
-
-			// Генерация токена
-			const token = generateToken({ id: newUser.id, email: newUser.email });
-
-			// Возвращаем пользователя и токен
-			return ServiceResponse.success(
-				"User created successfully", 
-				{ user: newUser, token }, 
-				StatusCodes.CREATED
-			);
-		} catch (ex) {
-			const errorMessage = `Error creating user: ${(ex as Error).message}`;
-			logger.error(errorMessage);
-			return ServiceResponse.failure(
-				"An error occurred while creating user.",
-				null,
-				StatusCodes.INTERNAL_SERVER_ERROR,
-			);
-		}
-	}
+	
 	
 	// Обновление пользователя
 	async updateUser(id: number, userData: UpdateUserInput): Promise<ServiceResponse<User | null>> {
@@ -198,7 +142,7 @@ export class UserService {
 				);
 			}
 			
-			// Удаление пользователя
+			// Удаление пользователя из бд
 			await prisma.user.delete({
 				where: { id }
 			});
@@ -218,25 +162,7 @@ export class UserService {
 		}
 	}
 
-	async login(email: string, password: string) {
-		try {
-			const user = await prisma.user.findUnique({ where: { email } });
-			
-		if (!user || !(await bcrypt.compare(password, user.password))) {
-			throw new Error('Invalid email or password');
-		}
-
-		const token = generateToken({ id: user.id, email: user.email });
-		const responseObject = { token };
-			return ServiceResponse.success("Вход осуществлен успешно", responseObject, StatusCodes.OK);
-
-
-		} catch (ex) {
-			const errorMessage = `Error logging in: ${(ex as Error).message}`;
-			logger.error(errorMessage);
-			return ServiceResponse.failure(errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-		}
-	}
+	
 
 
 

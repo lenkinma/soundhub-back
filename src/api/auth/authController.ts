@@ -1,15 +1,20 @@
-import { Request, Response } from 'express';
-import { UserService } from '../user/userService';
+import { Request, RequestHandler, Response } from 'express';
 import { handleServiceResponse } from '@/common/utils/httpHandlers';
+import { AuthService } from './authService';
 
-const userService = new UserService();
+const authService = new AuthService();
 
 export class AuthController {
   async login(req: Request, res: Response) {
     const { email, password } = req.body;
-    const serviceResponse = await userService.login(email, password);
+    const serviceResponse = await authService.login(email, password);
     return handleServiceResponse(serviceResponse, res);
   }
+
+  async registerNewUser(req: Request, res: Response) {
+		const serviceResponse = await authService.registerNewUser(req.body);
+		return handleServiceResponse(serviceResponse, res);
+	};
 
 }
 
