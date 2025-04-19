@@ -8,6 +8,7 @@ import { GetUserSchema, UserSchema, CreateUserSchema, UpdateUserSchema } from "@
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./userController";
 import { authMiddleware } from '../../common/middleware/authMiddleware';
+import { authorizeUser } from "@/common/middleware/authorizeUser";
 
 export const userRegistry = new OpenAPIRegistry();
 export const userRouter: Router = express.Router();
@@ -82,6 +83,7 @@ userRegistry.registerPath({
 // Маршрут для обновления пользователя
 userRouter.put("/:id", 
 	authMiddleware,
+	authorizeUser,
 	validateRequest(z.object({ 
 		params: GetUserSchema.shape.params,
 		body: UpdateUserSchema 

@@ -11,6 +11,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   try {
     const decoded = verifyToken(token);
     req.user = decoded;
+    // console.log(req.user);
     next();
   } catch (err) {
     res.status(400).json({ message: 'Invalid token.' });

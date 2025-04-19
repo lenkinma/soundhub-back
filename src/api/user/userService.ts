@@ -6,6 +6,7 @@ import type { User, CreateUserInput, UpdateUserInput, UserResponse } from "@/api
 import prisma from "@/db/prisma";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { logger } from "@/server";
+import jwt from 'jsonwebtoken';
 
 export class UserService {
 	// Получение всех пользователей
@@ -55,6 +56,7 @@ export class UserService {
 					password: false // Исключаем пароль из выборки
 				}
 			});
+
 			
 			if (!user) {
 				return ServiceResponse.failure("User not found", null, StatusCodes.NOT_FOUND);
@@ -140,6 +142,14 @@ export class UserService {
 					StatusCodes.NOT_FOUND
 				);
 			}
+
+			// if (user.id !== id) {
+			// 	return ServiceResponse.failure(
+			// 		"You are not allowed to update this user", 
+			// 		null, 
+			// 		StatusCodes.FORBIDDEN
+			// 	);
+			// }
 			
 			// Обновление пользователя
 			const updatedUser = await prisma.user.update({
