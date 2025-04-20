@@ -8,7 +8,6 @@ import { authController } from "./authController";
 import { LoginSchema, RegisterNewUserSchema } from "./authModel";
 import { UserSchema } from "../user/userModel";
 import { validateRequest } from "@/common/utils/httpHandlers";
-import { userController } from "../user/userController";
 
 export const authRegistry = new OpenAPIRegistry();
 export const authRouter: Router = express.Router();

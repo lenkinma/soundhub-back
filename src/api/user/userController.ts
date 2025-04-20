@@ -26,7 +26,8 @@ class UserController {
 		// id из параметров 
 		const id = Number.parseInt(req.params.id as string, 10);
 		// id из авторизации
-		// const user = req.user;
+
+		const user = req.user;
 		const serviceResponse = await userService.updateUser(id, req.body);
 		return handleServiceResponse(serviceResponse, res);
 	};

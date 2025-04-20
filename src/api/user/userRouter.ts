@@ -7,7 +7,7 @@ import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { GetUserSchema, UserSchema, UpdateUserSchema } from "@/api/user/userModel";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./userController";
-import { authMiddleware } from '../../common/middleware/authMiddleware';
+import { authMiddleware } from '@/common/middleware/authMiddleware';
 import { authorizeUser } from "@/common/middleware/authorizeUser";
 
 export const userRegistry = new OpenAPIRegistry();

@@ -175,24 +175,6 @@ export class UserService {
 
 
 
-
-
-
-	async getUserById(id: number) {
-		return await prisma.user.findUnique({
-			where: { id },
-			select: {
-				id: true,
-				name: true,
-				email: true,
-				avatar: true,
-				bio: true,
-				createdAt: true,
-				updatedAt: true,
-				password: false
-			}
-		});
-	}
 }
 
 export const userService = new UserService();
