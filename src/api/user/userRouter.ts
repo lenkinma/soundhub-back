@@ -61,8 +61,8 @@ userRegistry.registerPath({
 	},
 });
 userRouter.put("/:id", 
-	authMiddleware,
-	authorizeUser,
+	// authMiddleware,
+	// authorizeUser,
 	validateRequest(z.object({ 
 		params: GetUserSchema.shape.params,
 		body: UpdateUserSchema 

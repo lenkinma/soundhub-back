@@ -5,12 +5,16 @@ import { commonValidations } from "@/common/utils/commonValidation";
 
 extendZodWithOpenApi(z);
 
+export const RoleEnum = z.enum(["USER", "ADMIN"]);
+export type Role = z.infer<typeof RoleEnum>;
+
 // Полная схема User, соответствующая Prisma модели
 export const UserSchema = z.object({
 	id: z.number(),
 	name: z.string().nullable(),
 	email: z.string().email(),
 	password: z.string(),
+	role: RoleEnum.default("USER"),
 	avatar: z.string().nullable(),
 	bio: z.string().nullable(),
 	createdAt: z.date(),
@@ -22,6 +26,7 @@ export const UserResponseSchema = z.object({
 	id: z.number(),
 	name: z.string().nullable(),
 	email: z.string(),
+	role: RoleEnum, 
 	avatar: z.string().nullable(),
 	bio: z.string().nullable(),
 	createdAt: z.date(),
@@ -33,6 +38,7 @@ export const UpdateUserSchema = z.object({
 	name: z.string().nullable().optional(),
 	avatar: z.string().nullable().optional(),
 	bio: z.string().nullable().optional(),
+	role: RoleEnum.optional(), 
 });
 
 // Input Validation для GET users/:id endpoint

@@ -7,11 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id        Int      @id @default(autoincrement()) // Уникальный идентификатор пользователя
   name      String? // Имя пользователя (может быть необязательным)
   email     String   @unique // Уникальный email пользователя
   password  String // Хэшированный пароль
+  role      Role     @default(USER)
   avatar    String? // Ссылка на аватар пользователя (может быть необязательным)
   bio       String? // Описание профиля (может быть необязательным)
   createdAt DateTime @default(now()) // Дата регистрации
