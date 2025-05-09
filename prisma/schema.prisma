@@ -28,18 +28,21 @@ model User {
   likes         Like[] // Лайки, поставленные пользователем
   subscriptions Subscription[] @relation("subscribedTo") // Подписки пользователя
   subscribers   Subscription[] @relation("subscriber") // Подписчики пользователя
+  Comment       Comment[]
 }
 
 model Track {
-  id          Int      @id @default(autoincrement()) // Уникальный идентификатор трека
+  id          Int       @id @default(autoincrement()) // Уникальный идентификатор трека
   title       String // Название трека
   description String? // Описание трека (может быть необязательным)
-  genre       String? // Жанр трека (может быть необязательным)
+  fileUrl     String // Ссылка на файл трека (обязательное поле)
+  cover       String? // Ссылка на обложку трека (может быть необязательным)
   tags        String[] // Теги трека (массив строк)
   artistId    Int // ID пользователя, который загрузил трек
-  artist      User     @relation(fields: [artistId], references: [id]) // Связь с пользователем
+  artist      User      @relation(fields: [artistId], references: [id]) // Связь с пользователем
   likes       Like[] // Лайки, поставленные на трек
-  createdAt   DateTime @default(now()) // Дата загрузки трека
+  comments    Comment[] // Комментарии к треку
+  createdAt   DateTime  @default(now()) // Дата загрузки трека
 }
 
 model Like {
@@ -58,4 +61,14 @@ model Subscription {
   subscriber     User     @relation("subscriber", fields: [subscriberId], references: [id]) // Связь с подписчиком
   subscribedTo   User     @relation("subscribedTo", fields: [subscribedToId], references: [id]) // Связь с пользователем, на которого подписались
   createdAt      DateTime @default(now()) // Дата создания подписки
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement()) // Уникальный идентификатор комментария
+  text      String // Текст комментария
+  trackId   Int // ID трека, к которому относится комментарий
+  track     Track    @relation(fields: [trackId], references: [id]) // Связь с треком
+  userId    Int // ID пользователя, который оставил комментарий
+  user      User     @relation(fields: [userId], references: [id]) // Связь с пользователем
+  createdAt DateTime @default(now()) // Дата создания комментария
 }
