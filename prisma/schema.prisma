@@ -52,6 +52,8 @@ model Like {
   user      User     @relation(fields: [userId], references: [id]) // Связь с пользователем
   track     Track    @relation(fields: [trackId], references: [id]) // Связь с треком
   createdAt DateTime @default(now()) // Дата создания лайка
+
+  @@unique([userId, trackId])
 }
 
 model Subscription {
