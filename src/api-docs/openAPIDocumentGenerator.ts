@@ -10,6 +10,7 @@ import { meRegistry } from "@/api/me/meRouter";
 import { trackRegistry } from "@/api/track/trackRouter";
 import { commentRegistry } from "@/api/comment/commentRouter";
 import { likeRegistry } from "@/api/like/likeRouter";
+import { subscriptionRegistry } from "@/api/subscription/subscriptionRouter";
 export function generateOpenAPIDocument() {
   const registry = new OpenAPIRegistry([
     healthCheckRegistry,
@@ -19,6 +20,7 @@ export function generateOpenAPIDocument() {
     trackRegistry,
     commentRegistry,
     likeRegistry,
+    subscriptionRegistry,
   ]);
   const generator = new OpenApiGeneratorV3(registry.definitions);
 

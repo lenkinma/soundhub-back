@@ -15,7 +15,7 @@ import { env } from "@/common/utils/envConfig";
 import { trackRouter } from "@/api/track/trackRouter";
 import { commentRouter } from "@/api/comment/commentRouter";
 import { likeRouter } from "@/api/like/likeRouter";
-
+import { subscriptionRouter } from "@/api/subscription/subscriptionRouter";
 const logger = pino({ name: "server start" });
 const app: Express = express();
 
@@ -41,6 +41,7 @@ app.use("/me", meRouter);
 app.use("/tracks", trackRouter);
 app.use(commentRouter);
 app.use(likeRouter);
+app.use("/subscriptions", subscriptionRouter);
 // Swagger UI
 app.use(openAPIRouter);
 

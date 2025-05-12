@@ -28,10 +28,29 @@ export class MeService {
           StatusCodes.NOT_FOUND
         );
       }
-      return ServiceResponse.success<MeResponse>(
-        "User found",
-        user as MeResponse
-      );
+      // Считаем количество лайков на всех треках пользователя
+      const likesCount = await prisma.like.count({
+        where: { track: { artistId: id } },
+      });
+      // Считаем количество подписчиков
+      const subscribersCount = await prisma.subscription.count({
+        where: { subscribedToId: id },
+      });
+      // Считаем количество подписок
+      const subscriptionsCount = await prisma.subscription.count({
+        where: { subscriberId: id },
+      });
+      // Считаем количество треков пользователя
+      const tracksCount = await prisma.track.count({
+        where: { artistId: id },
+      });
+      return ServiceResponse.success("User found", {
+        ...user,
+        likesCount,
+        subscribersCount,
+        subscriptionsCount,
+        tracksCount,
+      });
     } catch (ex) {
       const errorMessage = `Error finding user with id ${id}:, ${
         (ex as Error).message

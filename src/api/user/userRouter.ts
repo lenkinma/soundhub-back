@@ -25,6 +25,25 @@ userRegistry.registerPath({
   method: "get",
   path: "/users",
   tags: ["User"],
+  request: {
+    query: z.object({
+      sortBy: z
+        .enum(["likes", "subscribers"])
+        .optional()
+        .describe(
+          "Сортировка: 'likes' — по лайкам, 'subscribers' — по подписчикам"
+        ),
+      limit: z
+        .string()
+        .optional()
+        .describe("Сколько пользователей на странице (по умолчанию 15)"),
+      offset: z
+        .string()
+        .optional()
+        .describe("Смещение для пагинации (по умолчанию 0)"),
+      name: z.string().optional().describe("Поиск по имени пользователя"),
+    }),
+  },
   responses: createApiResponse(z.array(UserSchema), "Success"),
 });
 userRouter.get("/", userController.getUsers);
@@ -37,7 +56,12 @@ userRegistry.registerPath({
   request: { params: GetUserSchema.shape.params },
   responses: createApiResponse(UserSchema, "Success"),
 });
-userRouter.get("/:id", validateRequest(GetUserSchema), userController.getUser);
+userRouter.get(
+  "/:id",
+  optionalAuthMiddleware,
+  validateRequest(GetUserSchema),
+  userController.getUser
+);
 
 // Эндпоинт для получения всех треков пользователя по id
 userRegistry.registerPath({

@@ -9,14 +9,29 @@ const userServiceInstance = new UserService();
 
 class UserController {
   async getUsers(req: Request, res: Response) {
-    const serviceResponse = await userService.findAll();
+    const sortBy =
+      req.query.sortBy === "likes" || req.query.sortBy === "subscribers"
+        ? req.query.sortBy
+        : undefined;
+    const name = req.query.name ? String(req.query.name) : undefined;
+    const limit = req.query.limit ? Number(req.query.limit) : 15;
+    const offset = req.query.offset ? Number(req.query.offset) : 0;
+    const serviceResponse = await userService.findAll(
+      sortBy as any,
+      name,
+      limit,
+      offset
+    );
     return handleServiceResponse(serviceResponse, res);
   }
 
   async getUser(req: Request, res: Response) {
     const id = Number.parseInt(req.params.id as string, 10);
-    const serviceResponse = await userService.findById(id);
-
+    let currentUserId: number | undefined = undefined;
+    if (req.user && typeof req.user === "object" && "id" in req.user) {
+      currentUserId = Number((req.user as any).id);
+    }
+    const serviceResponse = await userService.findById(id, currentUserId);
     return handleServiceResponse(serviceResponse, res);
   }
 

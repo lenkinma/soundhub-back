@@ -9,30 +9,61 @@ import type { User, UpdateUserInput, UserResponse } from "@/api/user/userModel";
 
 export class UserService {
   // Получение всех пользователей
-  async findAll(): Promise<ServiceResponse<User[] | null>> {
+  async findAll(
+    sortBy?: "likes" | "subscribers",
+    name?: string,
+    limit: number = 15,
+    offset: number = 0
+  ): Promise<ServiceResponse<any[] | null>> {
     try {
+      // Формируем условия поиска
+      const where: any = {};
+      if (name) {
+        where.name = { contains: name, mode: "insensitive" };
+      }
       const users = await prisma.user.findMany({
+        where,
         select: {
           id: true,
           name: true,
-          email: true,
           avatar: true,
-          role: true,
-          bio: true,
           createdAt: true,
           updatedAt: true,
-          password: false, // Исключаем пароль из выборки
         },
+        take: limit,
+        skip: offset,
       });
 
       if (!users || users.length === 0) {
-        return ServiceResponse.failure(
-          "No Users found",
-          null,
-          StatusCodes.NOT_FOUND
+        return ServiceResponse.success<any[]>("Users found", []);
+      }
+      // Добавляем количество подписчиков и лайков для каждого пользователя
+      let usersWithStats = await Promise.all(
+        users.map(async (user) => {
+          const subscribersCount = await prisma.subscription.count({
+            where: { subscribedToId: user.id },
+          });
+          const likesCount = await prisma.like.count({
+            where: { userId: user.id },
+          });
+          return {
+            ...user,
+            subscribersCount,
+            likesCount,
+          };
+        })
+      );
+      // Сортировка по фильтру
+      if (sortBy === "likes") {
+        usersWithStats = usersWithStats.sort(
+          (a, b) => b.likesCount - a.likesCount
+        );
+      } else if (sortBy === "subscribers") {
+        usersWithStats = usersWithStats.sort(
+          (a, b) => b.subscribersCount - a.subscribersCount
         );
       }
-      return ServiceResponse.success<User[]>("Users found", users as User[]);
+      return ServiceResponse.success<any[]>("Users found", usersWithStats);
     } catch (ex) {
       const errorMessage = `Error finding all users: $${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -45,7 +76,10 @@ export class UserService {
   }
 
   // Получение пользователя по ID
-  async findById(id: number): Promise<ServiceResponse<User | null>> {
+  async findById(
+    id: number,
+    currentUserId?: number
+  ): Promise<ServiceResponse<UserResponse | null>> {
     try {
       const user = await prisma.user.findUnique({
         where: { id },
@@ -69,7 +103,43 @@ export class UserService {
           StatusCodes.NOT_FOUND
         );
       }
-      return ServiceResponse.success<User>("User found", user as User);
+      // Считаем количество лайков на всех треках пользователя
+      const likesCount = await prisma.like.count({
+        where: { track: { artistId: id } },
+      });
+      // Считаем количество подписчиков
+      const subscribersCount = await prisma.subscription.count({
+        where: { subscribedToId: id },
+      });
+      // Считаем количество подписок
+      const subscriptionsCount = await prisma.subscription.count({
+        where: { subscriberId: id },
+      });
+      // Считаем количество треков пользователя
+      const tracksCount = await prisma.track.count({
+        where: { artistId: id },
+      });
+      // Проверяем, подписан ли currentUserId на этого пользователя
+      console.log("currentUserId:", currentUserId, "profileId:", id);
+      let isSubscribed = false;
+      if (currentUserId && currentUserId !== id) {
+        const sub = await prisma.subscription.findFirst({
+          where: {
+            subscriberId: Number(currentUserId),
+            subscribedToId: Number(id),
+          },
+        });
+        isSubscribed = !!sub;
+      }
+      console.log("isSubscribed:", isSubscribed);
+      return ServiceResponse.success("User found", {
+        ...user,
+        likesCount,
+        subscribersCount,
+        subscriptionsCount,
+        tracksCount,
+        isSubscribed,
+      });
     } catch (ex) {
       const errorMessage = `Error finding user with id ${id}:, ${
         (ex as Error).message
