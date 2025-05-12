@@ -3,6 +3,7 @@ import type { Request, RequestHandler, Response } from "express";
 import { userService } from "@/api/user/userService";
 import { handleServiceResponse } from "@/common/utils/httpHandlers";
 import { UserService } from "./userService";
+import { trackService } from "@/api/track/trackService";
 
 const userServiceInstance = new UserService();
 
@@ -36,8 +37,15 @@ class UserController {
   }
 
   async getUserTracks(req: Request, res: Response) {
-    const id = Number.parseInt(req.params.id as string, 10);
-    const serviceResponse = await userService.getUserTracks(id);
+    const requestedUserId = Number.parseInt(req.params.id as string, 10);
+    const currentUserId =
+      req.user && typeof req.user === "object" && "id" in req.user
+        ? (req.user as any).id
+        : undefined;
+    const serviceResponse = await trackService.getTracksByUserId(
+      requestedUserId,
+      currentUserId
+    );
     return handleServiceResponse(serviceResponse, res);
   }
 }

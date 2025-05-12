@@ -39,5 +39,68 @@ class CommentService {
       );
     }
   }
+  async deleteComment(commentId: number, userId: number) {
+    try {
+      const comment = await prisma.comment.findUnique({
+        where: { id: commentId },
+      });
+      if (!comment) {
+        return ServiceResponse.failure(
+          "Комментарий не найден",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+      if (comment.userId !== userId) {
+        return ServiceResponse.failure(
+          "Нет прав на удаление этого комментария",
+          null,
+          StatusCodes.FORBIDDEN
+        );
+      }
+      await prisma.comment.delete({ where: { id: commentId } });
+      return ServiceResponse.success("Комментарий удалён", null);
+    } catch (ex) {
+      logger.error(ex);
+      return ServiceResponse.failure(
+        "Ошибка при удалении комментария",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+  async updateComment(commentId: number, userId: number, text: string) {
+    try {
+      const comment = await prisma.comment.findUnique({
+        where: { id: commentId },
+      });
+      if (!comment) {
+        return ServiceResponse.failure(
+          "Комментарий не найден",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      }
+      if (comment.userId !== userId) {
+        return ServiceResponse.failure(
+          "Нет прав на редактирование этого комментария",
+          null,
+          StatusCodes.FORBIDDEN
+        );
+      }
+      const updated = await prisma.comment.update({
+        where: { id: commentId },
+        data: { text },
+      });
+      return ServiceResponse.success("Комментарий обновлён", updated);
+    } catch (ex) {
+      logger.error(ex);
+      return ServiceResponse.failure(
+        "Ошибка при обновлении комментария",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 }
 export const commentService = new CommentService();

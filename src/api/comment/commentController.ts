@@ -26,5 +26,34 @@ class CommentController {
     const serviceResponse = await commentService.getComments(trackId);
     return handleServiceResponse(serviceResponse, res);
   }
+  async deleteComment(req: Request, res: Response) {
+    const userId =
+      typeof req.user === "object" && req.user !== null && "id" in req.user
+        ? (req.user as any).id
+        : undefined;
+    const commentId = Number(req.params.commentId);
+    const serviceResponse = await commentService.deleteComment(
+      commentId,
+      userId
+    );
+    return handleServiceResponse(serviceResponse, res);
+  }
+  async updateComment(req: Request, res: Response) {
+    const userId =
+      typeof req.user === "object" && req.user !== null && "id" in req.user
+        ? (req.user as any).id
+        : undefined;
+    const commentId = Number(req.params.commentId);
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ message: "Текст комментария обязателен" });
+    }
+    const serviceResponse = await commentService.updateComment(
+      commentId,
+      userId,
+      text
+    );
+    return handleServiceResponse(serviceResponse, res);
+  }
 }
 export const commentController = new CommentController();

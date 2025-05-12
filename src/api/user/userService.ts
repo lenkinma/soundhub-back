@@ -180,38 +180,38 @@ export class UserService {
   }
 
   // Получение всех треков пользователя по id
-  async getUserTracks(id: number) {
-    try {
-      const tracks = await prisma.track.findMany({
-        where: { artistId: id },
-        include: {
-          comments: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  avatar: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-      return ServiceResponse.success("User tracks found", tracks);
-    } catch (ex) {
-      const errorMessage = `Error finding tracks for user with id ${id}: ${
-        (ex as Error).message
-      }`;
-      logger.error(errorMessage);
-      return ServiceResponse.failure(
-        "An error occurred while finding user tracks.",
-        null,
-        StatusCodes.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
+  // async getUserTracks(id: number) {
+  //   try {
+  //     const tracks = await prisma.track.findMany({
+  //       where: { artistId: id },
+  //       include: {
+  //         comments: {
+  //           include: {
+  //             user: {
+  //               select: {
+  //                 id: true,
+  //                 name: true,
+  //                 avatar: true,
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       orderBy: { createdAt: "desc" },
+  //     });
+  //     return ServiceResponse.success("User tracks found", tracks);
+  //   } catch (ex) {
+  //     const errorMessage = `Error finding tracks for user with id ${id}: ${
+  //       (ex as Error).message
+  //     }`;
+  //     logger.error(errorMessage);
+  //     return ServiceResponse.failure(
+  //       "An error occurred while finding user tracks.",
+  //       null,
+  //       StatusCodes.INTERNAL_SERVER_ERROR
+  //     );
+  //   }
+  // }
 }
 
 export const userService = new UserService();

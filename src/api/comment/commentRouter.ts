@@ -42,3 +42,42 @@ commentRegistry.registerPath({
 });
 
 commentRouter.get("/tracks/:trackId/comments", commentController.getComments);
+
+commentRouter.delete(
+  "/comments/:commentId",
+  authMiddleware,
+  commentController.deleteComment
+);
+
+commentRouter.patch(
+  "/comments/:commentId",
+  authMiddleware,
+  commentController.updateComment
+);
+
+commentRegistry.registerPath({
+  method: "delete",
+  path: "/comments/{commentId}",
+  tags: ["Comment"],
+  request: {
+    params: z.object({ commentId: z.string() }),
+  },
+  responses: createApiResponse(z.any(), "Комментарий удалён"),
+});
+
+commentRegistry.registerPath({
+  method: "patch",
+  path: "/comments/{commentId}",
+  tags: ["Comment"],
+  request: {
+    params: z.object({ commentId: z.string() }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ text: z.string() }),
+        },
+      },
+    },
+  },
+  responses: createApiResponse(z.any(), "Комментарий обновлён"),
+});

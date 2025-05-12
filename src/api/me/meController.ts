@@ -2,6 +2,7 @@ import type { Request, RequestHandler, Response } from "express";
 import { uploadToS3 } from "@/common/services/s3Service";
 import { meService } from "./meService";
 import { handleServiceResponse } from "@/common/utils/httpHandlers";
+import { trackService } from "@/api/track/trackService";
 
 class MeController {
   async getMe(req: Request, res: Response) {
@@ -83,11 +84,14 @@ class MeController {
   }
 
   async getMyTracks(req: Request, res: Response) {
-    const id =
-      typeof req.user === "object" && req.user !== null && "id" in req.user
+    const userId =
+      req.user && typeof req.user === "object" && "id" in req.user
         ? (req.user as any).id
         : undefined;
-    const serviceResponse = await meService.getMyTracks(id);
+    const serviceResponse = await trackService.getTracksByUserId(
+      userId,
+      userId
+    );
     return handleServiceResponse(serviceResponse, res);
   }
 

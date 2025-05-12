@@ -13,7 +13,7 @@ import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./userController";
 import { authMiddleware } from "@/common/middleware/authMiddleware";
 import { authorizeUser } from "@/common/middleware/authorizeUser";
-
+import { optionalAuthMiddleware } from "@/common/middleware/optionalAuthMiddleware";
 export const userRegistry = new OpenAPIRegistry();
 export const userRouter: Router = express.Router();
 
@@ -49,7 +49,11 @@ userRegistry.registerPath({
   },
   responses: createApiResponse(z.array(z.any()), "User tracks found"),
 });
-userRouter.get("/:id/tracks", userController.getUserTracks);
+userRouter.get(
+  "/:id/tracks",
+  optionalAuthMiddleware,
+  userController.getUserTracks
+);
 
 // Регистрация маршрута для обновления пользователя
 userRegistry.registerPath({
